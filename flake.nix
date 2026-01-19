@@ -6,10 +6,10 @@
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.05";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    # lanzaboote = {
-    #   url = "github:nix-community/lanzaboote/v0.4.2";
-    #   inputs.nixpkgs.follows = "nixpkgs-stable";
-    # };
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.0.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     impermanence.url = "github:nix-community/impermanence";
   };
 

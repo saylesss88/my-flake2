@@ -13,14 +13,8 @@
     # ./impermanence.nix
   ];
   #============================#
-  #      Lanzaboote (requires nixpkgs 25.05)
+  #      Lanzaboote
   # ===========================#
-  # nixpkgs.overlays = [
-  #  (final: prev: {
-  #     lanzaboote = (inputs.nixpkgs-stable.legacyPackages.${pkgs.system}.lanzaboote or prev.lanzaboote)
-  #  })
-  # ];
-
   # environment.systemPackages = [ pkgs.sbctl ];
 
   # boot.loader.systemd-boot.enable = lib.mkForce false;
