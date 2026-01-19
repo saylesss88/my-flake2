@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 
@@ -11,6 +12,24 @@
     # ./hardware-configuration.nix
     # ./impermanence.nix
   ];
+  #============================#
+  #      Lanzaboote (requires nixpkgs 25.05)
+  # ===========================#
+  # nixpkgs.overlays = [
+  #  (final: prev: {
+  #     lanzaboote = (inputs.nixpkgs-stable.legacyPackages.${pkgs.system}.lanzaboote or prev.lanzaboote)
+  #  })
+  # ];
+
+  # environment.systemPackages = [ pkgs.sbctl ];
+
+  # boot.loader.systemd-boot.enable = lib.mkForce false;
+
+  # boot.lanzaboote = {
+  #   enable = true;
+  #   pkiBundle = "/var/lib/sbctl";
+  # };
+  # =================================#
 
   boot.loader = {
     systemd-boot = {

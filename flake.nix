@@ -3,12 +3,18 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.05";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    # lanzaboote = {
+    #   url = "github:nix-community/lanzaboote/v0.4.2";
+    #   inputs.nixpkgs.follows = "nixpkgs-stable";
+    # };
+    impermanence.url = "github:nix-community/impermanence";
   };
 
   outputs =
-    { nixpkgs, home-manager, ... }:
+    { nixpkgs, home-manager, ... }@inputs:
     {
       nixosConfigurations = {
         hostname = nixpkgs.lib.nixosSystem {
@@ -16,14 +22,17 @@
           modules = [
             ./configuration.nix
             home-manager.nixosModules.home-manager
+            # inputs.lanzaboote.nixosModules.lanzaboote
+
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              # Change your-user
+              # Change `your-user`
               home-manager.users.your-user = ./home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit inputs;
+              };
 
-              # Optionally, use home-manager.extraSpecialArgs to pass
-              # arguments to home.nix
             }
           ];
         };
