@@ -3,7 +3,7 @@
 # ZFS on LUKS + Impermanence Setup Script
 # Based on instructions by saylesss88
 
-set -e
+set -euo pipefail
 
 # Color definitions
 RED='\033[0;31m'
@@ -39,7 +39,8 @@ fi
 
 # 2. Partitioning
 echo -e "${GREEN}[1/6] Partitioning disk...${NC}"
-# Wipe signatures
+# Wipe + new GPT
+sgdisk --zap-all "$DISK"
 wipefs -a "$DISK"
 
 # Create partitions using sgdisk for automation (easier than cfdisk scripting)
@@ -47,6 +48,10 @@ wipefs -a "$DISK"
 # Part 2: Remaining space for LUKS/ZFS (Hex Code 8300 - Linux Filesystem)
 sgdisk -n 1:0:+1G -t 1:ef00 -c 1:"EFI System" "$DISK"
 sgdisk -n 2:0:0 -t 2:8300 -c 2:"Linux LUKS" "$DISK"
+
+# Re-read partition table *after* creating partitions
+partprobe "$DISK"
+udevadm settle
 
 # Determine partition names (handle nvme naming convention p1 vs 1)
 if [[ "$DISK" =~ "nvme" ]]; then
@@ -64,7 +69,7 @@ mkfs.fat -F32 -n EFI "$PART1"
 # 4. Setup LUKS
 echo -e "${GREEN}[3/6] Setting up LUKS encryption...${NC}"
 echo -e "${YELLOW}Enter password for LUKS encryption:${NC}"
-cryptsetup luksFormat "$PART2"
+cryptsetup luksFormat --type luks2 "$PART2"
 echo -e "${YELLOW}Opening LUKS container...${NC}"
 cryptsetup open "$PART2" cryptroot
 
@@ -118,11 +123,73 @@ mount -t zfs rpool/safe/persist /mnt/persist
 LUKS_UUID=$(blkid -s UUID -o value "$PART2")
 
 echo -e "${GREEN}=== Setup Complete! ===${NC}"
+# --- Post-flight checks -------------------------------------------------------
+echo -e "${GREEN}=== Post-flight checks ===${NC}"
+
+fail() { echo -e "${RED}ERROR:${NC} $*" >&2; exit 1; }
+warn() { echo -e "${YELLOW}WARN:${NC} $*" >&2; }
+
+# 1) LUKS mapping exists / is active
+if ! cryptsetup status cryptroot >/dev/null 2>&1; then
+  fail "cryptroot mapping not active (cryptsetup status cryptroot failed)"
+fi
+
+# 2) ZFS pool exists and is ONLINE
+pool_state="$(zpool status rpool 2>/dev/null | awk -F': ' '/^ state:/ {print $2; exit}')"
+[ -n "$pool_state" ] || fail "Could not read zpool state for rpool"
+
+if [ "$pool_state" != "ONLINE" ]; then
+  zpool status rpool >&2 || true
+  fail "rpool state is '$pool_state' (expected ONLINE)"
+fi
+
+# 3) Required datasets exist
+for ds in \
+  rpool/local/root \
+  rpool/local/nix \
+  rpool/safe/home \
+  rpool/safe/persist
+do
+  zfs list -H -o name "$ds" >/dev/null 2>&1 || fail "Missing dataset: $ds"
+done
+
+# 4) Impermanence base snapshot exists
+# (zfs supports listing snapshots with -t snapshot) [web:107]
+zfs list -t snapshot -H -o name rpool/local/root 2>/dev/null | grep -qx 'rpool/local/root@blank' \
+  || fail "Missing snapshot: rpool/local/root@blank"
+
+# 5) Mountpoints are actually mounted where expected
+# findmnt can search for a filesystem by a target path (-T/--target). [web:106]
+findmnt -T /mnt        >/dev/null 2>&1 || fail "/mnt is not a mountpoint"
+findmnt -T /mnt/boot   >/dev/null 2>&1 || fail "/mnt/boot is not a mountpoint"
+findmnt -T /mnt/nix    >/dev/null 2>&1 || fail "/mnt/nix is not a mountpoint"
+findmnt -T /mnt/home   >/dev/null 2>&1 || fail "/mnt/home is not a mountpoint"
+findmnt -T /mnt/persist >/dev/null 2>&1 || fail "/mnt/persist is not a mountpoint"
+
+# 6) Show a compact status summary (useful when you paste logs)
+echo
+echo "--- lsblk -f ${DISK} ---"
+lsblk -f "$DISK" || true
+echo
+echo "--- zpool status rpool ---"
+zpool status rpool || true
+echo
+echo "--- zfs list ---"
+zfs list || true
+echo
+echo -e "${GREEN}All checks passed.${NC}"
+# ---------------------------------------------------------------------------
+
 echo -e "LUKS UUID for configuration.nix: ${YELLOW}${LUKS_UUID}${NC}"
 echo
+echo -e "${GREEN}Generating NixOS config in /mnt/etc/nixos...${NC}"
+nixos-generate-config --root /mnt
+
+echo -e "${GREEN}Config generated:${NC}"
+ls -l /mnt/etc/nixos || true
+
 echo "Next steps:"
-echo "1. Generate config: sudo nixos-generate-config --root /mnt"
-echo "2. Edit configuration.nix and add:"
+echo "1. Edit configuration.nix and add:"
 echo "   boot.initrd.luks.devices.\"cryptroot\".device = \"/dev/disk/by-uuid/${LUKS_UUID}\";"
 echo
 

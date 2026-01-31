@@ -9,7 +9,7 @@
 {
   imports = [
     # Include the results of the hardware scan.
-    # ./hardware-configuration.nix
+    ./hardware-configuration.nix
     # ./impermanence.nix
   ];
   #============================#
@@ -84,7 +84,7 @@
 
   users.mutableUsers = false;
 
-  # Change `your-user`
+  # CHANGE `your-user`
   users.users.your-user = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
@@ -94,6 +94,7 @@
   };
 
   # This enables `chown -R your-user:your-user`
+  # CHANGE `your-user`
   users.groups.your-user = { };
 
   # ------------------------------------------------------------------

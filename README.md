@@ -22,6 +22,27 @@ ssh nixos@192.168.1.x
 
 ---
 
+## Scripted ZFS on LUKS
+
+If you use the script included in the repo, you can move straight to setting up
+your `configuration.nix`.
+
+```bash
+git clone https://github.com/saylesss88/my-flake2.git
+cd my-flake2
+sudo chmod +x install.sh test.sh
+sudo ./install.sh
+```
+
+When the script finishes, run `test.sh` to ensure everything is correct.
+
+```bash
+sudo ./test.sh
+```
+
+Skip the next section of the guide and add the requirements to your
+`configuration.nix`.
+
 ## Setup LUKS & Create your zpool
 
 When creating the VM, before clicking "Finish", check the "Customize
