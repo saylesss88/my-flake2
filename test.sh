@@ -71,5 +71,18 @@ ls -l /mnt/etc/nixos || true
 echo
 echo -e "${GREEN}All checks passed.${NC}"
 # ---------------------------------------------------------------------------
+# Run these commands after the script finishes but before you reboot
 
+# Create the directory on the persistent dataset
+mkdir -p /mnt/persist/etc/nixos
+
+# Move the generated config files to safe storage
+mv /mnt/etc/nixos/* /mnt/persist/etc/nixos/
+
+# Remove the now-empty directory on the ephemeral root
+rmdir /mnt/etc/nixos
+
+# Link the persistent config back to the system location
+# (The rollback will wipe the link, but we can recreate it or use /persist in the config)
+# Ideally, you just want the files safe first.
 
