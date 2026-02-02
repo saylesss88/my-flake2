@@ -24,6 +24,10 @@ ssh nixos@192.168.1.x
 
 ## Scripted ZFS on LUKS
 
+- Inspect
+  [install.sh](https://github.com/saylesss88/my-flake2/blob/main/install.sh)
+  HERE.
+
 If you use the script included in the repo, you can move straight to setting up
 your `configuration.nix`.
 
@@ -35,6 +39,9 @@ sudo ./install.sh
 ```
 
 When the script finishes, run `test.sh` to ensure everything is correct.
+
+- Inspect [test.sh](https://github.com/saylesss88/my-flake2/blob/main/test.sh)
+  HERE.
 
 ```bash
 sudo ./test.sh

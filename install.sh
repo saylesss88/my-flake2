@@ -193,3 +193,21 @@ echo "1. Edit configuration.nix and add:"
 echo "   boot.initrd.luks.devices.\"cryptroot\".device = \"/dev/disk/by-uuid/${LUKS_UUID}\";"
 echo
 
+echo -e "${GREEN}=== Setup Complete! ===${NC}"
+echo -e "${YELLOW}IMPORTANT: Before enabling rollback, edit /mnt/etc/nixos/hardware-configuration.nix${NC}"
+echo -e "${YELLOW}Add 'neededForBoot = true;' to BOTH /home and /persist filesystem entries!${NC}"
+echo
+echo "Example:"
+echo '  fileSystems."/home" = {'
+echo '    device = "rpool/safe/home";'
+echo '    fsType = "zfs";'
+echo '    neededForBoot = true;  # <-- ADD THIS'
+echo '  };'
+echo
+echo '  fileSystems."/persist" = {'
+echo '    device = "rpool/safe/persist";'
+echo '    fsType = "zfs";'
+echo '    neededForBoot = true;  # <-- ADD THIS'
+echo '  };'
+
+
