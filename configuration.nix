@@ -64,8 +64,15 @@
   # Roll-back root to blank snapshot on **every** boot
   # ------------------------------------------------------------------
   # Uncomment after first reboot
-  # boot.initrd.postMountCommands = lib.mkAfter ''
-  #   zfs rollback -r rpool/local/root@blank
+  # boot.initrd.postDeviceCommands = lib.mkAfter ''
+  # 1. Wait for LUKS
+  # udevadm settle
+  # 2. Force the pool into the "garage"
+  # zpool import -f -N rpool
+  # 3. Clean the slate
+  # zfs rollback -r rpool/local/root@blank
+  # 4. Give the pool back to the system
+  # zpool export rpool
   # '';
 
   # ------------------------------------------------------------------
@@ -73,6 +80,7 @@
   # ------------------------------------------------------------------
   # Unique 8-hex hostId (run once in live ISO: head -c4 /dev/urandom | xxd -p)
   networking.hostId = "a1b2c3d4"; # <<<--- replace with your own value
+  networking.networkmanager.enable = true;
 
   users.users.root.initialPassword = "changeme"; # change after first login
 
@@ -118,9 +126,4 @@
   #  enable = true;
   #  settings.PermitRootLogin = "yes";
   #};
-
-  # ------------------------------------------------------------------
-  # Mark /persist as needed for boot
-  # ------------------------------------------------------------------
-  fileSystems."/persist".neededForBoot = true;
 }
