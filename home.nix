@@ -7,7 +7,7 @@
   home.username = "your-user";
   # Change your-user
   home.homeDirectory = lib.mkDefault "/home/your-user";
-  home.stateVersion = "25.05";
+  home.stateVersion = "26.05";
 
   imports = [
   ];

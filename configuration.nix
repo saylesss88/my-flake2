@@ -1,8 +1,4 @@
 {
-  config,
-  lib,
-  pkgs,
-  inputs,
   ...
 }:
 
@@ -53,7 +49,7 @@
 
   boot.initrd.luks.devices = {
     cryptroot = {
-      # replace uuid# with output of UUID # from `sudo blkid /dev/vda2`
+      # replace `uuid#` with output of UUID # from `sudo blkid /dev/vda2`
       device = "/dev/disk/by-uuid/uuid#";
       allowDiscards = true;
       preLVM = true;
@@ -61,22 +57,7 @@
   };
 
   # ------------------------------------------------------------------
-  # Roll-back root to blank snapshot on **every** boot
-  # ------------------------------------------------------------------
-  # Uncomment after first reboot
-  # boot.initrd.postDeviceCommands = lib.mkAfter ''
-  # 1. Wait for LUKS
-  # udevadm settle
-  # 2. Force the pool into the "garage"
-  # zpool import -f -N rpool
-  # 3. Clean the slate
-  # zfs rollback -r rpool/local/root@blank
-  # 4. Give the pool back to the system
-  # zpool export rpool
-  # '';
-
-  # ------------------------------------------------------------------
-  # 5. Basic system (root password, serial console for VM)
+  #  Basic system
   # ------------------------------------------------------------------
   # Unique 8-hex hostId (run once in live ISO: head -c4 /dev/urandom | xxd -p)
   networking.hostId = "a1b2c3d4"; # <<<--- replace with your own value
@@ -95,7 +76,11 @@
   # CHANGE `your-user`
   users.users.your-user = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+    ];
     group = "your-user";
     # :r /tmp/pass.txt:
     initialHashedPassword = "";
@@ -126,4 +111,5 @@
   #  enable = true;
   #  settings.PermitRootLogin = "yes";
   #};
+  system.stateVersion = "26.05";
 }
